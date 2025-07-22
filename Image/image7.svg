@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640.2 359.7">
+  <defs>
+    <style>
+      .cls-1 {
+        fill: #c4c4c4;
+      }
+    </style>
+  </defs>
+  <g id="Layer_2" data-name="Layer 2">
+    <rect class="cls-1" x=".5" y=".5" width="639.2" height="358.7"/>
+  </g>
+  <g id="Layer_3_copy_6" data-name="Layer 3 copy 6">
+    <path d="m364.73,114.7v13.8l-67.32,140.82h-21.65l67.08-136.77v-.48h-75.64v-17.36h97.53Z"/>
+  </g>
+</svg>
