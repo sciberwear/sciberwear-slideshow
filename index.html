@@ -1,0 +1,303 @@
+
+/*---- SLIDESHOW ---*/
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>SCIBERWEAR Slideshow</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    @font-face {
+      font-family: 'SFMonoMedium';
+      src: url('https://cdn.jsdelivr.net/gh/sciberwear/assets@main/SFMonoMedium.otf');
+    }
+
+    * {
+      box-sizing: border-box;
+      font-family: 'SFMonoMedium', monospace;
+      font-size: 12px;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      background: none;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .slideshow-wrapper {
+      position: relative;
+      width: 100%;
+      max-width: 640px;
+      aspect-ratio: 16 / 9;
+      border: 1.8px solid black;
+      overflow: hidden;
+      background-color: #fff;
+    }
+
+    .slide {
+      display: none;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      position: absolute;
+      top: 0;
+      left: 0;
+    }
+
+    .slide.active {
+      display: block;
+    }
+
+    .controls {
+      background: #dedede;
+      padding: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: absolute;
+      bottom: 0;
+      width: 100%;
+      z-index: 10;
+    }
+
+    .prev-btn,
+    .next-btn {
+      background: #b7b7b7;
+      border: none;
+      padding: 6px 10px;
+      color: #000;
+      cursor: pointer;
+      border-radius: 0;
+      transition: all 0.2s ease;
+      font-family: 'SFMonoMedium';
+    }
+
+    .prev-btn:hover,
+    .next-btn:hover {
+      background: #000;
+      color: #fff;
+    }
+
+    .autoplay-toggle-wrapper {
+      position: absolute;
+      bottom: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 11;
+      background: #dedede;
+      padding: 5px 10px;
+      display: flex;
+      align-items: center;
+    }
+
+    .autoplay-toggle {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .toggle-track {
+      width: 41px;
+      height: 13px;
+      background: #dedede;
+      border: 1px solid #a5a5a5;
+      position: relative;
+      cursor: pointer;
+    }
+
+    .toggle-thumb {
+      width: 16px;
+      height: 16px;
+      background: #b1b1b1;
+      position: absolute;
+      left: 2px;
+      top: -2.5px;
+      transition: left 0.2s ease-in-out;
+    }
+
+    .toggle-track.active {
+      background: #4CAF50;
+    }
+
+    .toggle-track.active .toggle-thumb {
+      left: 22px;
+    }
+
+    .dot-container {
+      display: flex;
+      justify-content: center;
+      padding-top: 12px;
+      padding-bottom: 0;
+      position: absolute;
+      bottom: 48px;
+      width: 100%;
+      z-index: 12;
+    }
+
+    .toggle-box {
+      width: 12px;
+      height: 12px;
+      background: #e8e8e8;
+      border: 1.7px solid black;
+      cursor: pointer;
+      border-radius: 0;
+      margin-right: 6px;
+      transition: 0.1s ease-in-out;
+    }
+
+    .toggle-box:hover {
+      background: #000;
+    }
+
+    .toggle-box.active {
+      background: #000;
+    }
+
+    .playlist {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      width: 257px;
+      background: #e8e8e8;
+      padding: 5px;
+      border: 1.8px solid #000;
+      z-index: 20;
+      display: none;
+    }
+
+    .playlist.active {
+      display: block;
+    }
+
+    .playlist-item {
+      padding: 5px;
+      cursor: pointer;
+      border-bottom: 1px solid #ccc;
+    }
+
+    .playlist-item:hover,
+    .playlist-item.active {
+      background: #b1b4b5;
+    }
+  </style>
+</head>
+<body>
+  <div class="slideshow-wrapper" id="slideshowWrapper">
+    <img src="https://via.placeholder.com/640x360?text=1" class="slide active" />
+    <img src="https://via.placeholder.com/640x360?text=2" class="slide" />
+    <img src="https://via.placeholder.com/640x360?text=3" class="slide" />
+    <img src="https://via.placeholder.com/640x360?text=4" class="slide" />
+    <img src="https://via.placeholder.com/640x360?text=5" class="slide" />
+    <img src="https://via.placeholder.com/640x360?text=6" class="slide" />
+    <img src="https://via.placeholder.com/640x360?text=7" class="slide" />
+
+    <div id="playlist" class="playlist"></div>
+
+    <div class="dot-container" id="dotContainer"></div>
+
+    <div class="autoplay-toggle-wrapper">
+      <div class="autoplay-toggle">
+        <span>Off</span>
+        <div id="autoplayTrack" class="toggle-track active">
+          <div class="toggle-thumb"></div>
+        </div>
+        <span>On</span>
+      </div>
+    </div>
+
+    <div class="controls">
+      <button class="prev-btn" onclick="changeSlide(-1)">Previous</button>
+      <button class="next-btn" onclick="changeSlide(1)">Next</button>
+    </div>
+  </div>
+
+  <script>
+    const slides = document.querySelectorAll('.slide');
+    const dotContainer = document.getElementById('dotContainer');
+    const autoplayTrack = document.getElementById('autoplayTrack');
+    const playlist = document.getElementById('playlist');
+    const wrapper = document.getElementById('slideshowWrapper');
+
+    let current = 0;
+    let timer = null;
+    let autoplay = autoplayTrack.classList.contains('active'); // ✅ synced with UI
+
+    const imageTitles = [
+      "Image 1", "Image 2", "Image 3", "Image 4", "Image 5", "Image 6", "Image 7"
+    ];
+
+    function createDots() {
+      dotContainer.innerHTML = '';
+      slides.forEach((_, idx) => {
+        const dot = document.createElement('div');
+        dot.className = 'toggle-box';
+        if (idx === current) {
+          dot.classList.add('active');
+        }
+        dot.addEventListener('click', () => goToSlide(idx));
+        dotContainer.appendChild(dot);
+      });
+    }
+
+    function createPlaylist() {
+      playlist.innerHTML = '';
+      imageTitles.forEach((title, idx) => {
+        const item = document.createElement('div');
+        item.className = 'playlist-item';
+        item.innerText = title;
+        if (idx === current) item.classList.add('active');
+        item.onclick = () => goToSlide(idx);
+        playlist.appendChild(item);
+      });
+    }
+
+    function goToSlide(index) {
+      slides[current].classList.remove('active');
+      current = index;
+      slides[current].classList.add('active');
+      createDots();
+      createPlaylist();
+    }
+
+    function changeSlide(dir) {
+      let next = current + dir;
+      if (next < 0) next = slides.length - 1;
+      if (next >= slides.length) next = 0;
+      goToSlide(next);
+    }
+
+    autoplayTrack.addEventListener('click', () => {
+      autoplay = !autoplay;
+      autoplayTrack.classList.toggle('active', autoplay);
+      if (autoplay) startAutoSlide();
+      else clearInterval(timer);
+    });
+
+    function startAutoSlide() {
+      clearInterval(timer);
+      timer = setInterval(() => {
+        changeSlide(1);
+      }, 5000);
+    }
+
+    wrapper.addEventListener('mouseenter', () => {
+      clearInterval(timer);
+      playlist.classList.add('active');
+    });
+
+    wrapper.addEventListener('mouseleave', () => {
+      if (autoplay) startAutoSlide();
+      playlist.classList.remove('active');
+    });
+
+    // ✅ Init
+    createDots();
+    createPlaylist();
+    if (autoplay) startAutoSlide();
+  </script>
+</body>
+</html>
